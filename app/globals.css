@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+  }
+
+  ::selection {
+    @apply bg-brand text-white;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-shell px-5 sm:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 text-xs font-semibold uppercase tracking-brand transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-dark;
+  }
+
+  .btn-light {
+    @apply btn bg-white text-brand-deeper hover:bg-mist;
+  }
+
+  .btn-outline {
+    @apply btn border border-line bg-transparent text-ink hover:border-brand hover:text-brand;
+  }
+
+  .btn-outline-light {
+    @apply btn border border-white/40 text-white hover:border-white hover:bg-white/10;
+  }
+
+  .label-caps {
+    @apply text-[0.68rem] font-medium uppercase tracking-brand text-brand-soft;
+  }
+
+  .input {
+    @apply w-full border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-brand-soft/70 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-widest text-brand-light;
+  }
+
+  .section-title {
+    @apply font-display text-3xl text-ink sm:text-4xl;
+  }
+}
