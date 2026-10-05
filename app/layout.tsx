@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cinzel, Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { CartProvider } from "@/components/CartProvider";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { AppFooter } from "@/components/AppFooter";
+import { BottomNav } from "@/components/BottomNav";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -25,19 +27,44 @@ export const metadata: Metadata = {
   },
   description:
     "Distinction in every detail. Premium corporate and casual suits tailored for the modern gentleman.",
+  applicationName: "Suits Made Simple",
+  appleWebApp: {
+    capable: true,
+    title: "Suits Made Simple",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#3B4654",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${cinzel.variable} ${inter.variable}`}>
+    <html lang="en" className={`${cinzel.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("sms_theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="flex min-h-screen flex-col">
-        <CartProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            {/* AppFooter renders null inside the Capacitor shell */}
+            <AppFooter />
+            <BottomNav />
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -53,7 +53,7 @@ export default function FitGuidePage() {
       </section>
 
       {/* The six measurements, on the suit itself */}
-      <section id="how-to-measure" className="mt-20 border-t border-line bg-white sm:mt-24">
+      <section id="how-to-measure" className="mt-20 border-t border-line bg-surface sm:mt-24">
         <div className="shell py-16 sm:py-20">
           <div className="max-w-2xl">
             <p className="label-caps">Option B — Made to measure</p>
@@ -81,7 +81,7 @@ export default function FitGuidePage() {
               larger.
             </p>
 
-            <div className="mt-8 overflow-x-auto border border-line bg-white shadow-card">
+            <div className="mt-8 overflow-x-auto border border-line bg-surface shadow-card">
               <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-line bg-mist">
@@ -128,7 +128,7 @@ export default function FitGuidePage() {
           </div>
 
           <div className="space-y-5">
-            <div className="overflow-hidden border border-line bg-white">
+            <div className="overflow-hidden border border-line bg-surface">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/products/shepherds-grey.jpg"
@@ -137,7 +137,7 @@ export default function FitGuidePage() {
                 loading="lazy"
               />
             </div>
-            <div className="overflow-hidden border border-line bg-white">
+            <div className="overflow-hidden border border-line bg-surface">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/products/sabbath-ivory-life.jpg"

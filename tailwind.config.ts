@@ -5,6 +5,7 @@ import type { Config } from "tailwindcss";
  * deep slate blue (#3B4654) with white type and warm paper neutrals.
  */
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -17,18 +18,19 @@ const config: Config = {
           DEFAULT: "#3B4654",
           dark: "#2C3541",
           deeper: "#212832",
-          light: "#5A6675",
-          soft: "#8B95A3",
+          light: "rgb(var(--color-text-light) / <alpha-value>)",
+          soft: "rgb(var(--color-text-soft) / <alpha-value>)",
         },
-        mist: "#F1F2F4",
-        paper: "#FAF9F6",
+        mist: "rgb(var(--color-bg-mist) / <alpha-value>)",
+        paper: "rgb(var(--color-bg-paper) / <alpha-value>)",
+        surface: "rgb(var(--color-bg-surface) / <alpha-value>)",
         taupe: {
           DEFAULT: "#C3BCB1",
           light: "#D9D3C9",
           dark: "#A49D93",
         },
-        line: "#E3E6EA",
-        ink: "#242B34",
+        line: "rgb(var(--color-border-line) / <alpha-value>)",
+        ink: "rgb(var(--color-text-ink) / <alpha-value>)",
       },
       fontFamily: {
         display: ["var(--font-cinzel)", "Georgia", "serif"],

@@ -22,7 +22,7 @@ export async function ShopByColour() {
 
         <ul className="mt-12 grid grid-cols-2 gap-px overflow-hidden border border-line bg-line sm:grid-cols-4 lg:grid-cols-7">
           {COLOURS.map((colour) => (
-            <li key={colour} className="bg-white">
+            <li key={colour} className="bg-surface">
               <Link
                 href={`/shop?colour=${encodeURIComponent(colour)}`}
                 className="group flex h-full flex-col items-center gap-4 px-4 py-8 text-center transition-colors hover:bg-paper"

@@ -179,14 +179,31 @@ export async function POST(request: NextRequest) {
   // With Paystack configured the buyer pays first; the callback and webhook
   // settle the order, email the receipt and clear the cart.
   if (paystackReady && reference) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+    const host = request.headers.get("host");
+
+    let siteUrl = "";
+    if (forwardedHost) {
+      siteUrl = `${forwardedProto}://${forwardedHost}`.replace(/\/$/, "");
+    } else if (host && !host.includes("localhost")) {
+      const proto = request.nextUrl.protocol.replace(":", "") || "https";
+      siteUrl = `${proto}://${host}`.replace(/\/$/, "");
+    } else if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost")) {
+      siteUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    } else {
+      siteUrl = request.nextUrl.origin.replace(/\/$/, "");
+    }
+
+    const isApp = body.isApp === true || request.cookies.get("sms_is_app")?.value === "1";
+    const callbackUrl = `${siteUrl}/api/paystack/callback${isApp ? "?from=app" : ""}`;
 
     try {
       const transaction = await initializeTransaction({
         email: payload.email,
         amountKobo: totalCents,
         reference,
-        callbackUrl: `${siteUrl.replace(/\/$/, "")}/api/paystack/callback`,
+        callbackUrl,
         metadata: {
           order_number: order.order_number,
           customer: payload.fullName,

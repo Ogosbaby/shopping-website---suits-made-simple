@@ -45,7 +45,7 @@ export default async function ProductPage({
       </nav>
 
       <div className="mt-8 grid gap-12 lg:grid-cols-2 lg:gap-16">
-        <div className="border border-line bg-white shadow-card lg:sticky lg:top-28 lg:self-start">
+        <div className="border border-line bg-surface shadow-card lg:sticky lg:top-28 lg:self-start">
           <ProductGallery images={product.images ?? [product.image]} name={product.name} />
         </div>
 

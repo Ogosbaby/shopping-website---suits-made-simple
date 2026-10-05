@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     .from("cart_items")
     .update({ user_id: user.id })
     .eq("cart_id", cartId)
-    .eq("user_id", null)
+    .is("user_id", null)
     .select("*, product:products(*)");
 
   if (error) {

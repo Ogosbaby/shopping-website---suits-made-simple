@@ -36,23 +36,25 @@ export function Logo({
   markClassName = "h-10 w-10",
   wordClassName = "text-2xl",
   showTagline = true,
+  taglineClassName = "",
 }: {
   className?: string;
   markClassName?: string;
   wordClassName?: string;
   showTagline?: boolean;
+  taglineClassName?: string;
 }) {
   return (
     <Link
       href="/"
-      className={`group inline-flex items-center gap-3 ${className}`}
+      className={`group inline-flex items-center gap-3 text-ink dark:text-white ${className}`}
       aria-label="Suits Made Simple — home"
     >
-      <LogoMark className={`${markClassName} shrink-0 transition-transform duration-300 group-hover:scale-105`} />
+      <LogoMark className={`${markClassName} shrink-0 transition-transform duration-300 group-hover:scale-105 text-ink dark:text-white`} />
       <span className="flex flex-col leading-none">
-        <span className={`font-display font-semibold tracking-[0.18em] ${wordClassName}`}>SMS</span>
+        <span className={`font-display font-semibold tracking-[0.18em] text-ink dark:text-white ${wordClassName}`}>SMS</span>
         {showTagline ? (
-          <span className="mt-1 text-[0.55rem] font-medium uppercase tracking-brand opacity-70">
+          <span className={`mt-1 text-[0.55rem] font-medium uppercase tracking-brand text-brand-light dark:text-gray-300 ${taglineClassName}`}>
             Suits Made Simple
           </span>
         ) : null}

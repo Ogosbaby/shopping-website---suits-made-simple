@@ -126,7 +126,7 @@ export default function CartPage() {
             ))}
           </div>
 
-          <aside className="h-fit border border-line bg-white p-7 shadow-card lg:sticky lg:top-28">
+          <aside className="h-fit border border-line bg-surface p-7 shadow-card lg:sticky lg:top-28">
             <h2 className="font-display text-lg text-ink">Order summary</h2>
             <dl className="mt-6 space-y-3 text-sm">
               <div className="flex justify-between">
@@ -206,7 +206,7 @@ export default function CartPage() {
 
 function EmptyState({ title, copy }: { title: string; copy: string }) {
   return (
-    <div className="mt-12 border border-line bg-white p-12 text-center shadow-card">
+    <div className="mt-12 border border-line bg-surface p-12 text-center shadow-card">
       <p className="font-display text-xl text-ink">{title}</p>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-brand-light">{copy}</p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">

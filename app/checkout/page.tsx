@@ -85,10 +85,16 @@ export default function CheckoutPage() {
     setServerError(null);
 
     try {
+      const isApp =
+        typeof window !== "undefined" &&
+        (localStorage.getItem("sms_is_app") === "1" ||
+          new URLSearchParams(window.location.search).get("from") === "app" ||
+          document.cookie.includes("sms_is_app=1"));
+
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, isApp }),
       });
       const data = (await response.json()) as {
         orderNumber?: string;
@@ -113,7 +119,8 @@ export default function CheckoutPage() {
 
       clear();
       const emailParam = data.emailSent === false ? "&email=0" : "";
-      router.push(`/checkout/success?order=${encodeURIComponent(data.orderNumber ?? "")}${emailParam}`);
+      const appParam = isApp ? "&from=app" : "";
+      router.push(`/checkout/success?order=${encodeURIComponent(data.orderNumber ?? "")}${emailParam}${appParam}`);
     } catch {
       setServerError("Unable to place your order. Please try again.");
       setSubmitting(false);
@@ -130,7 +137,7 @@ export default function CheckoutPage() {
       {loading ? (
         <div className="mt-12 h-64 animate-pulse bg-mist" />
       ) : !configured || items.length === 0 ? (
-        <div className="mt-12 border border-line bg-white p-12 text-center shadow-card">
+        <div className="mt-12 border border-line bg-surface p-12 text-center shadow-card">
           <p className="font-display text-xl text-ink">There is nothing to check out yet.</p>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-brand-light">
             {configured
@@ -195,7 +202,7 @@ export default function CheckoutPage() {
             </section>
           </div>
 
-          <aside className="h-fit border border-line bg-white p-7 shadow-card lg:sticky lg:top-28">
+          <aside className="h-fit border border-line bg-surface p-7 shadow-card lg:sticky lg:top-28">
             <h2 className="font-display text-lg text-ink">Your order</h2>
             <ul className="mt-6 divide-y divide-line">
               {items.map((item) => (

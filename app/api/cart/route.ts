@@ -3,8 +3,14 @@ import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/sup
 import { MEASUREMENT_FIELDS, type CartItem, type Measurements, type SizeType } from "@/types";
 
 /**
- * Cart API — every mutation is persisted to the `cart_items` table and keyed
- * by a long-lived `sms_cart_id` cookie so guests keep their cart across visits.
+ * Cart API — every mutation is persisted to the `cart_items` table.
+ *
+ * A cart is scoped in one of two ways:
+ *  - Signed out: keyed by a long-lived `sms_cart_id` cookie, so guests keep
+ *    their cart across visits.
+ *  - Signed in: keyed by `user_id`, so the very same cart follows the shopper
+ *    to any device (browser, mobile app, tablet). Guest lines created on the
+ *    current device are adopted into the account on first use.
  */
 
 const CART_COOKIE = "sms_cart_id";
@@ -12,6 +18,7 @@ const MAX_QUANTITY = 20;
 
 const cartCookieOptions = {
   httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
   maxAge: 60 * 60 * 24 * 60, // 60 days
@@ -25,10 +32,47 @@ function pickClient(): SupabaseClient | null {
   return createSupabaseAdminClient() ?? createSupabaseServerClient();
 }
 
-function resolveCartId(request: NextRequest): { cartId: string; isNew: boolean } {
-  const existing = request.cookies.get(CART_COOKIE)?.value;
-  if (existing) return { cartId: existing, isNew: false };
-  return { cartId: crypto.randomUUID(), isNew: true };
+/** The signed-in shopper's id, or null for guests / unconfigured projects. */
+async function getCurrentUserId(): Promise<string | null> {
+  const serverClient = createSupabaseServerClient();
+  if (!serverClient) return null;
+
+  try {
+    const {
+      data: { user },
+    } = await serverClient.auth.getUser();
+    return user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+interface CartScope {
+  /** Cookie-based cart id for guests (also the id new lines are filed under). */
+  cartId: string;
+  /** Signed-in shopper, whose account owns the cart across devices. */
+  userId: string | null;
+  /** Whether the response should hand the browser a fresh cart cookie. */
+  isNew: boolean;
+}
+
+async function resolveCart(request: NextRequest, client: SupabaseClient): Promise<CartScope> {
+  const cookieCartId = request.cookies.get(CART_COOKIE)?.value ?? null;
+  const userId = await getCurrentUserId();
+  const cartId = cookieCartId ?? crypto.randomUUID();
+  const isNew = !cookieCartId;
+
+  // Once a shopper signs in, adopt any guest lines this device created so
+  // nothing is stranded behind the anonymous cookie.
+  if (userId && cookieCartId) {
+    await client
+      .from("cart_items")
+      .update({ user_id: userId })
+      .eq("cart_id", cartId)
+      .is("user_id", null);
+  }
+
+  return { cartId, userId, isNew };
 }
 
 function withCartCookie(response: NextResponse, cartId: string): NextResponse {
@@ -63,13 +107,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ items: [], configured: false });
   }
 
-  const { cartId, isNew } = resolveCartId(request);
+  const { cartId, userId, isNew } = await resolveCart(request, client);
 
-  const { data, error } = await client
-    .from("cart_items")
-    .select("*, product:products(*)")
-    .eq("cart_id", cartId)
-    .order("created_at", { ascending: true });
+  // Signed-in shoppers read every line owned by their account (across every
+  // device); guests read only the lines filed under their cookie.
+  const scoped = client.from("cart_items").select("*, product:products(*)");
+  const { data, error } = await (userId
+    ? scoped.eq("user_id", userId)
+    : scoped.eq("cart_id", cartId)
+  ).order("created_at", { ascending: true });
 
   if (error) {
     console.error("[cart] failed to load cart:", error.message);
@@ -151,15 +197,18 @@ export async function POST(request: NextRequest) {
     variantId = variant.id as string;
   }
 
-  const { cartId, isNew } = resolveCartId(request);
+  const { cartId, userId, isNew } = await resolveCart(request, client);
 
-  // Merge with an identical line when one already exists.
-  const { data: existingRows } = await client
+  // Merge with an identical line when one already exists in this cart.
+  const existingScoped = client
     .from("cart_items")
     .select("id, quantity, size_type, standard_size, measurements")
-    .eq("cart_id", cartId)
     .eq("product_id", productId)
     .eq("size_type", sizeType);
+  const { data: existingRows } = await (userId
+    ? existingScoped.eq("user_id", userId)
+    : existingScoped.eq("cart_id", cartId)
+  );
 
   const match = (existingRows ?? []).find((row) =>
     sizeType === "standard"
@@ -188,6 +237,7 @@ export async function POST(request: NextRequest) {
     .from("cart_items")
     .insert({
       cart_id: cartId,
+      user_id: userId,
       product_id: productId,
       variant_id: variantId,
       size_type: sizeType satisfies SizeType,
@@ -228,16 +278,16 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "A cart item is required." }, { status: 400 });
   }
 
-  const cartId = request.cookies.get(CART_COOKIE)?.value;
-  if (!cartId) {
+  const { cartId, userId } = await resolveCart(request, client);
+  if (!userId && !request.cookies.get(CART_COOKIE)?.value) {
     return NextResponse.json({ error: "Your cart is empty." }, { status: 404 });
   }
 
-  const { data: updated, error } = await client
-    .from("cart_items")
-    .update({ quantity })
-    .eq("id", itemId)
-    .eq("cart_id", cartId)
+  const scoped = client.from("cart_items").update({ quantity }).eq("id", itemId);
+  const { data: updated, error } = await (userId
+    ? scoped.eq("user_id", userId)
+    : scoped.eq("cart_id", cartId)
+  )
     .select("*, product:products(*)")
     .maybeSingle();
 
@@ -260,19 +310,18 @@ export async function DELETE(request: NextRequest) {
   }
 
   const itemId = request.nextUrl.searchParams.get("itemId");
-  const cartId = request.cookies.get(CART_COOKIE)?.value;
-
   if (!itemId) {
     return NextResponse.json({ error: "A cart item is required." }, { status: 400 });
   }
-  if (!cartId) {
+
+  const { cartId, userId } = await resolveCart(request, client);
+  if (!userId && !request.cookies.get(CART_COOKIE)?.value) {
     return NextResponse.json({ removed: 0 });
   }
 
-  const query =
-    itemId === "all"
-      ? client.from("cart_items").delete().eq("cart_id", cartId)
-      : client.from("cart_items").delete().eq("cart_id", cartId).eq("id", itemId);
+  const scoped = client.from("cart_items").delete();
+  const scopedById = userId ? scoped.eq("user_id", userId) : scoped.eq("cart_id", cartId);
+  const query = itemId === "all" ? scopedById : scopedById.eq("id", itemId);
 
   const { error } = await query;
 

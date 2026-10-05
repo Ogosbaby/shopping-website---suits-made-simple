@@ -195,12 +195,21 @@ export interface CatalogFilters {
   category?: ProductCategory;
   colour?: Colour;
   occasion?: Occasion;
+  /** Free-text search across name, description, colour and occasion. */
+  q?: string;
 }
 
 function matches(product: Product, filters: CatalogFilters): boolean {
   if (filters.category && product.category !== filters.category) return false;
   if (filters.colour && product.colour !== filters.colour) return false;
   if (filters.occasion && !product.occasions.includes(filters.occasion)) return false;
+  if (filters.q) {
+    const needle = filters.q.toLowerCase();
+    const haystack = [product.name, product.description, product.colour, ...product.occasions]
+      .join(" ")
+      .toLowerCase();
+    if (!haystack.includes(needle)) return false;
+  }
   return true;
 }
 

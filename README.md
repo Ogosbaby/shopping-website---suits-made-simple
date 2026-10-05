@@ -32,7 +32,7 @@ Built for the HNG15 Lesson 2 task.
 - `/checkout/failed` — Shown when a Paystack payment could not be verified. The cart is kept.
 - `/api/paystack/callback` — Buyer redirect after payment; verifies the transaction server-to-server.
 - `/api/paystack/webhook` — Paystack's authoritative settlement notification (signature checked).
-- `/login` — Google sign-in (explicit Google Auth button).
+- `/login` — Email + password sign-in and registration, plus Google (web).
 - `/account` — The signed-in customer's orders.
 
 ## Quick start
@@ -138,6 +138,16 @@ MAILGUN_FROM="Suits Made Simple <postmaster@mg.yourdomain.com>"
 MAILGUN_BASE_URL=https://api.mailgun.net
 ```
 
+## Mobile app (Android)
+
+The storefront also ships as an Android app. It runs the live site in a native WebView, so the
+web and mobile clients share one database, one account and one cart — adding a piece on the web
+shows up in the app, and vice versa. The SMS tuxedo mark is the launcher icon and the splash
+screen.
+
+See **[MOBILE.md](./MOBILE.md)** for the architecture, the one-time deploy prerequisite, and how
+to rebuild the APK.
+
 ## Scripts
 
 ```bash
@@ -148,6 +158,7 @@ npm run typecheck        # tsc --noEmit
 npm run generate:images  # regenerate the catalog imagery (no API key required)
 npm run audit:layout     # responsive layout audit in headless Chrome
 npm run review:sheet     # build the imagery contact sheet for review
+node scripts/generate-app-assets.mjs   # regenerate the Android icon + splash sources (mobile/resources)
 ```
 
 ## Catalog imagery
@@ -188,8 +199,9 @@ products ─┬─ images text[]               (gallery: cover, alternate, lifes
 - Money is stored as an integer in **kobo** (the minor unit of the naira) in every `*_cents`
   column, and formatted for display by `formatMoney` in `lib/format.ts` using `en-NG` / `NGN`.
   Prices are shown as `₦289,000`, without minor units.
-- Cart is keyed by a signed `sms_cart_id` HTTP-only cookie, so both guests and signed-in
-  customers keep a durable cart in the database.
+- Cart is keyed by a signed `sms_cart_id` HTTP-only cookie for guests, and by `user_id` once a
+  shopper signs in — so the same account sees the same cart on every device (web, Android app).
+  Guest lines created on a device are adopted into the account on sign-in.
 - Totals are recomputed from `products.price_cents` on the server at checkout; the client
   never dictates prices. Paystack is charged the same server-computed total, and a payment that
   does not cover the order is never settled.

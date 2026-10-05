@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import type { CartItem, Measurements, SizeType } from "@/types";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface AddToCartInput {
   productId: string;
@@ -74,6 +75,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void refresh();
+  }, [refresh]);
+
+  // When a shopper signs in on this device, fold their guest cart into the
+  // account, then reload so the account's items (from every device) appear.
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN") return;
+      void (async () => {
+        try {
+          await fetch("/api/auth/migrate", { method: "POST" });
+        } catch {
+          // The cart route adopts guest lines on read, so a failed migrate is recoverable.
+        }
+        await refresh();
+      })();
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, [refresh]);
 
   const addItem = useCallback(

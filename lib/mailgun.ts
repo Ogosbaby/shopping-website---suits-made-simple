@@ -56,6 +56,16 @@ function sizeLabel(item: OrderItem): string {
     : `Standard ${item.standard_size ?? "—"}`;
 }
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderItemsRows(items: OrderItem[]): string {
   return items
     .map((item) => {
@@ -63,9 +73,9 @@ function renderItemsRows(items: OrderItem[]): string {
       return `
         <tr>
           <td style="padding:16px 0;border-bottom:1px solid #E3E6EA;vertical-align:top;">
-            <div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#242B34;letter-spacing:0.02em;">${item.product_name}</div>
-            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5A6675;margin-top:4px;">${sizeLabel(item)}${
-              fit ? `<br /><span style="color:#8B95A3;">${fit}</span>` : ""
+            <div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#242B34;letter-spacing:0.02em;">${escapeHtml(item.product_name)}</div>
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5A6675;margin-top:4px;">${escapeHtml(sizeLabel(item))}${
+              fit ? `<br /><span style="color:#8B95A3;">${escapeHtml(fit)}</span>` : ""
             }</div>
           </td>
           <td style="padding:16px 0;border-bottom:1px solid #E3E6EA;vertical-align:top;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#5A6675;">${item.quantity}</td>
@@ -79,11 +89,21 @@ function renderItemsRows(items: OrderItem[]): string {
 
 export function renderOrderConfirmationHtml(order: Order, items: OrderItem[]): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const firstName = order.full_name.trim().split(/\s+/)[0] || "Sir";
+  const rawFirstName = order.full_name.trim().split(/\s+/)[0] || "Sir";
+  const firstName = escapeHtml(rawFirstName);
+  const fullName = escapeHtml(order.full_name);
+  const addressLine1 = escapeHtml(order.address_line1);
+  const addressLine2 = order.address_line2 ? escapeHtml(order.address_line2) : "";
+  const city = escapeHtml(order.city);
+  const state = escapeHtml(order.state);
+  const postalCode = order.postal_code ? escapeHtml(order.postal_code) : "";
+  const country = escapeHtml(order.country);
+  const phone = escapeHtml(order.phone);
+  const orderNumber = escapeHtml(order.order_number);
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Order ${order.order_number}</title></head>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Order ${orderNumber}</title></head>
 <body style="margin:0;padding:0;background-color:#F1F2F4;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F1F2F4;padding:32px 12px;">
     <tr><td align="center">
@@ -100,7 +120,7 @@ export function renderOrderConfirmationHtml(order: Order, items: OrderItem[]): s
             <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#5A6675;margin:14px 0 0;">
               ${firstName}, thank you for your order. Our tailoring team has received it and will begin
               preparing your garments. Your order reference is
-              <strong style="color:#3B4654;">${order.order_number}</strong>.
+              <strong style="color:#3B4654;">${orderNumber}</strong>.
             </p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
               <tr>
@@ -129,11 +149,11 @@ export function renderOrderConfirmationHtml(order: Order, items: OrderItem[]): s
             <div style="margin-top:32px;padding:20px;background-color:#F1F2F4;">
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8B95A3;">Delivering to</div>
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.7;color:#242B34;margin-top:8px;">
-                ${order.full_name}<br />
-                ${order.address_line1}${order.address_line2 ? `<br />${order.address_line2}` : ""}<br />
-                ${order.city}, ${order.state}${order.postal_code ? ` ${order.postal_code}` : ""}<br />
-                ${order.country}<br />
-                ${order.phone}
+                ${fullName}<br />
+                ${addressLine1}${addressLine2 ? `<br />${addressLine2}` : ""}<br />
+                ${city}, ${state}${postalCode ? ` ${postalCode}` : ""}<br />
+                ${country}<br />
+                ${phone}
               </div>
             </div>
             <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.7;color:#5A6675;margin:28px 0 0;">
@@ -246,12 +266,21 @@ export async function sendOrderConfirmationEmail(
     return sendViaNodemailer(order, items);
   }
 
+  const fromAddress = config.from.includes("<")
+    ? config.from
+    : `Suits Made Simple <${config.from}>`;
+
   const body = new URLSearchParams({
-    from: config.from,
+    from: fromAddress,
     to: order.email,
-    subject: `Order ${order.order_number} confirmed — Suits Made Simple`,
+    subject: `Order Confirmation #${order.order_number} — Suits Made Simple`,
     text: renderOrderConfirmationText(order, items),
     html: renderOrderConfirmationHtml(order, items),
+    // CRITICAL: Disable link rewriting on sandbox/custom domains so URLs aren't flagged as phishing
+    "o:tracking": "no",
+    "o:tracking-clicks": "no",
+    "o:tracking-opens": "yes",
+    "h:Reply-To": "concierge@suitsmadesimple.com",
   });
 
   try {
@@ -267,10 +296,18 @@ export async function sendOrderConfirmationEmail(
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
-      console.error(`[mailgun] send failed (${response.status}): ${detail} — falling back to Nodemailer.`);
+      console.error(
+        `[mailgun] send failed (${response.status}): ${detail} — attempting Nodemailer fallback.`
+      );
+      if (detail.includes("Sandbox subdomains are for test purposes only")) {
+        console.warn(
+          "[mailgun] Note: Mailgun Sandbox domains only deliver to verified Authorized Recipients. Add recipient email in Mailgun Dashboard -> Sending -> Authorized Recipients."
+        );
+      }
       return sendViaNodemailer(order, items);
     }
 
+    console.log(`[mailgun] Order confirmation sent for ${order.order_number} to ${order.email}`);
     return true;
   } catch (error) {
     console.error("[mailgun] send threw error, falling back to Nodemailer:", error);

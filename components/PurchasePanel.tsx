@@ -94,7 +94,7 @@ export function PurchasePanel({
           className={`border p-4 text-left transition-colors ${
             sizeType === "standard"
               ? "border-brand bg-brand/[0.04]"
-              : "border-line bg-white hover:border-brand-light"
+              : "border-line bg-surface hover:border-brand-light"
           }`}
           aria-pressed={sizeType === "standard"}
         >
@@ -113,7 +113,7 @@ export function PurchasePanel({
           className={`border p-4 text-left transition-colors ${
             sizeType === "custom"
               ? "border-brand bg-brand/[0.04]"
-              : "border-line bg-white hover:border-brand-light"
+              : "border-line bg-surface hover:border-brand-light"
           }`}
           aria-pressed={sizeType === "custom"}
         >
@@ -202,36 +202,40 @@ export function PurchasePanel({
         </div>
       </div>
 
-      {/* Add to cart */}
-      <button
-        type="button"
-        onClick={handleAddToCart}
-        disabled={submitting}
-        className="btn-primary mt-8 w-full"
-      >
-        {submitting ? "Adding…" : `Add to cart — ${formatMoney(priceCents * quantity)}`}
-      </button>
-
-      {status ? (
-        <div
-          role="status"
-          className={`mt-4 border px-4 py-3 text-sm ${
-            status.kind === "success"
-              ? "border-brand/30 bg-brand/[0.05] text-brand"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
+      {/* Add to cart — sticky at the bottom on mobile, inline on desktop. */}
+      <div className="sticky bottom-0 z-30 -mx-5 mt-8 border-t border-line bg-paper/95 px-5 pt-3 pb-safe backdrop-blur md:static md:mx-0 md:border-t-0 md:bg-transparent md:px-0 md:pt-0 md:pb-0 md:backdrop-blur-none">
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={submitting}
+          className="btn-primary w-full"
         >
-          {status.message}
-          {status.kind === "success" ? (
-            <>
-              {" "}
-              <Link href="/cart" className="font-semibold underline underline-offset-4">
-                View cart
-              </Link>
-            </>
-          ) : null}
-        </div>
-      ) : null}
+          {submitting ? "Adding…" : `Add to cart — ${formatMoney(priceCents * quantity)}`}
+        </button>
+
+        {status ? (
+          <div
+            role="status"
+            className={`mt-3 mb-3 border px-4 py-3 text-sm md:mb-0 ${
+              status.kind === "success"
+                ? "border-brand/30 bg-brand/[0.05] text-brand"
+                : "border-red-200 bg-red-50 text-red-700"
+            }`}
+          >
+            {status.message}
+            {status.kind === "success" ? (
+              <>
+                {" "}
+                <Link href="/cart" className="font-semibold underline underline-offset-4">
+                  View cart
+                </Link>
+              </>
+            ) : null}
+          </div>
+        ) : (
+          <div className="h-3 md:hidden" aria-hidden="true" />
+        )}
+      </div>
     </div>
   );
 }

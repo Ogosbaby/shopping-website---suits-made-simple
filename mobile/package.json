@@ -1,0 +1,17 @@
+{
+  "name": "suits-made-simple-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor Android shell for the Suits Made Simple storefront.",
+  "scripts": {
+    "assets": "capacitor-assets generate --android",
+    "sync": "cap sync android",
+    "build:apk": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.2",
+    "@capacitor/core": "^6.2.2"
+  }
+}

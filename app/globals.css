@@ -3,12 +3,32 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-bg-paper: 250 249 246;
+    --color-bg-surface: 255 255 255;
+    --color-text-ink: 36 43 52;
+    --color-border-line: 227 230 234;
+    --color-bg-mist: 241 242 244;
+    --color-text-light: 90 102 117;
+    --color-text-soft: 139 149 163;
+  }
+
+  .dark {
+    --color-bg-paper: 15 20 28;
+    --color-bg-surface: 24 32 42;
+    --color-text-ink: 243 244 246;
+    --color-border-line: 41 52 68;
+    --color-bg-mist: 21 28 37;
+    --color-text-light: 160 171 186;
+    --color-text-soft: 122 135 151;
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-paper font-sans text-ink antialiased;
+    @apply bg-paper font-sans text-ink antialiased transition-colors duration-200;
   }
 
   ::selection {
@@ -26,15 +46,15 @@
   }
 
   .btn-primary {
-    @apply btn bg-brand text-white hover:bg-brand-dark;
+    @apply btn bg-brand text-white hover:bg-brand-dark dark:bg-amber-600 dark:text-gray-950 dark:hover:bg-amber-500;
   }
 
   .btn-light {
-    @apply btn bg-white text-brand-deeper hover:bg-mist;
+    @apply btn bg-surface text-brand-deeper hover:bg-mist dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700;
   }
 
   .btn-outline {
-    @apply btn border border-line bg-transparent text-ink hover:border-brand hover:text-brand;
+    @apply btn border border-line bg-transparent text-ink hover:border-brand hover:text-brand dark:border-[#293444] dark:text-gray-200 dark:hover:border-amber-400 dark:hover:text-amber-400;
   }
 
   .btn-outline-light {
@@ -42,18 +62,32 @@
   }
 
   .label-caps {
-    @apply text-[0.68rem] font-medium uppercase tracking-brand text-brand-soft;
+    @apply text-[0.68rem] font-medium uppercase tracking-brand text-brand-soft dark:text-slate-400;
   }
 
   .input {
-    @apply w-full border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-brand-soft/70 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand;
+    @apply w-full border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-brand-soft/70 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-[#293444] dark:bg-[#151C25] dark:text-white dark:placeholder:text-gray-500;
   }
 
   .field-label {
-    @apply mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-widest text-brand-light;
+    @apply mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-widest text-brand-light dark:text-slate-300;
   }
 
   .section-title {
-    @apply font-display text-3xl text-ink sm:text-4xl;
+    @apply font-display text-3xl text-ink sm:text-4xl dark:text-white;
   }
 }
+
+/* Dark mode refinements */
+.dark .shadow-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+  background-color: #151C25;
+  border-color: #293444;
+  color: #F3F4F6;
+}
+

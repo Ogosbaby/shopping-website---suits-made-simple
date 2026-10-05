@@ -29,6 +29,13 @@ export async function getProducts(filters: CatalogFilters = {}): Promise<Product
   if (filters.category) query = query.eq("category", filters.category);
   if (filters.colour) query = query.eq("colour", filters.colour);
   if (filters.occasion) query = query.contains("occasions", [filters.occasion]);
+  if (filters.q) {
+    // Strictly sanitize search string to alphanumeric, whitespace, and hyphens to prevent PostgREST query injection
+    const term = filters.q.replace(/[^a-zA-Z0-9\s-]/g, " ").trim();
+    if (term) {
+      query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%,colour.ilike.%${term}%`);
+    }
+  }
 
   const { data, error } = await query;
   if (error) {

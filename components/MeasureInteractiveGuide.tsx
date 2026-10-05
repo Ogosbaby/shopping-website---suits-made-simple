@@ -73,7 +73,7 @@ export function MeasureInteractiveGuide() {
             <li
               key={field.key}
               onClick={() => setActiveKey(field.key)}
-              className={`cursor-pointer bg-white transition-all duration-300 ${
+              className={`cursor-pointer bg-surface transition-all duration-300 ${
                 isSelected
                   ? "ring-2 ring-inset ring-brand bg-paper/60"
                   : "hover:bg-mist/30"

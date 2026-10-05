@@ -31,17 +31,21 @@ async function getOrder(orderNumber: string): Promise<{ order: Order; items: Ord
   return { order: order as Order, items: (items ?? []) as OrderItem[] };
 }
 
+import { ClearCartOnSuccess } from "@/components/ClearCartOnSuccess";
+
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { order?: string; email?: string };
+  searchParams: { order?: string; email?: string; from?: string };
 }) {
   const orderNumber = searchParams.order ?? "";
   const emailFailed = searchParams.email === "0";
+  const isApp = searchParams.from === "app";
   const result = await getOrder(orderNumber);
 
   return (
     <div className="shell py-16 sm:py-24">
+      <ClearCartOnSuccess />
       <div className="mx-auto max-w-2xl text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center border border-brand/25 bg-brand/[0.05] text-brand">
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
@@ -78,7 +82,7 @@ export default async function CheckoutSuccessPage({
       </div>
 
       {result ? (
-        <div className="mx-auto mt-14 max-w-2xl border border-line bg-white shadow-card">
+        <div className="mx-auto mt-14 max-w-2xl border border-line bg-surface shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-7 py-5">
             <div>
               <p className="label-caps">Order reference</p>
@@ -158,10 +162,10 @@ export default async function CheckoutSuccessPage({
       ) : null}
 
       <div className="mt-12 flex flex-wrap justify-center gap-4">
-        <Link href="/shop" className="btn-primary">
+        <Link href={isApp ? "/shop?from=app" : "/shop"} className="btn-primary">
           Continue shopping
         </Link>
-        <Link href="/account" className="btn-outline">
+        <Link href={isApp ? "/account?from=app" : "/account"} className="btn-outline">
           View your account
         </Link>
       </div>

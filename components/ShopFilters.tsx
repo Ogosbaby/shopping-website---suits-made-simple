@@ -8,6 +8,7 @@ interface ActiveFilters {
   category?: string;
   colour?: string;
   occasion?: string;
+  q?: string;
 }
 
 const CATEGORIES: { label: string; value: ProductCategory | "all" }[] = [
@@ -21,6 +22,7 @@ function buildHref(params: ActiveFilters): string {
   if (params.category) search.set("category", params.category);
   if (params.colour) search.set("colour", params.colour);
   if (params.occasion) search.set("occasion", params.occasion);
+  if (params.q) search.set("q", params.q);
   const query = search.toString();
   return query ? `/shop?${query}` : "/shop";
 }
@@ -32,7 +34,7 @@ function Pill({ href, label, active }: { href: string; label: string; active: bo
       className={`border px-2.5 py-1.5 text-[0.6rem] font-semibold uppercase tracking-brand transition-colors ${
         active
           ? "border-brand bg-brand text-white"
-          : "border-line bg-white text-brand-light hover:border-brand hover:text-brand"
+          : "border-line bg-surface text-brand-light hover:border-brand hover:text-brand"
       }`}
     >
       {label}
@@ -44,14 +46,22 @@ function Pill({ href, label, active }: { href: string; label: string; active: bo
  * A slim bar showing the result count, plus the filters tucked behind a toggle.
  * The collection itself is what a visitor should meet first.
  */
-export function ShopFilters({ count, category, colour, occasion }: ActiveFilters & { count: number }) {
-  const hasFilters = Boolean(category || colour || occasion);
+export function ShopFilters({ count, category, colour, occasion, q }: ActiveFilters & { count: number }) {
+  const hasFilters = Boolean(category || colour || occasion || q);
   const [open, setOpen] = useState(hasFilters);
 
+  /** Every filter link keeps the active search term. */
+  const href = (overrides: ActiveFilters) => buildHref({ q, ...overrides });
+
   const active: { label: string; href: string }[] = [];
-  if (category) active.push({ label: category === "premium_casual" ? "Premium Casual" : "Corporate", href: buildHref({ colour, occasion }) });
-  if (occasion) active.push({ label: occasion, href: buildHref({ category, colour }) });
-  if (colour) active.push({ label: colour, href: buildHref({ category, occasion }) });
+  if (q) active.push({ label: `“${q}”`, href: href({ q: undefined }) });
+  if (category)
+    active.push({
+      label: category === "premium_casual" ? "Premium Casual" : "Corporate",
+      href: href({ category: undefined }),
+    });
+  if (occasion) active.push({ label: occasion, href: href({ occasion: undefined }) });
+  if (colour) active.push({ label: colour, href: href({ colour: undefined }) });
 
   return (
     <div className="border-y border-line">
@@ -64,7 +74,7 @@ export function ShopFilters({ count, category, colour, occasion }: ActiveFilters
             <Link
               key={chip.label}
               href={chip.href}
-              className="inline-flex items-center gap-1.5 border border-line bg-white px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-brand text-brand transition-colors hover:border-brand"
+              className="inline-flex items-center gap-1.5 border border-line bg-surface px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-brand text-brand transition-colors hover:border-brand"
             >
               {chip.label}
               <span aria-hidden="true" className="text-brand-soft">
@@ -108,11 +118,7 @@ export function ShopFilters({ count, category, colour, occasion }: ActiveFilters
                 key={entry.value}
                 label={entry.label}
                 active={(entry.value === "all" && !category) || entry.value === category}
-                href={buildHref({
-                  category: entry.value === "all" ? undefined : entry.value,
-                  colour,
-                  occasion,
-                })}
+                href={href({ category: entry.value === "all" ? undefined : entry.value })}
               />
             ))}
           </div>
@@ -121,13 +127,13 @@ export function ShopFilters({ count, category, colour, occasion }: ActiveFilters
             <span className="mr-1 w-16 shrink-0 text-[0.58rem] uppercase tracking-brand text-brand-soft">
               Occasion
             </span>
-            <Pill label="Any" active={!occasion} href={buildHref({ category, colour })} />
+            <Pill label="Any" active={!occasion} href={href({ occasion: undefined })} />
             {OCCASIONS.map((entry) => (
               <Pill
                 key={entry}
                 label={entry}
                 active={entry === occasion}
-                href={buildHref({ category, colour, occasion: entry })}
+                href={href({ occasion: entry })}
               />
             ))}
           </div>
@@ -136,14 +142,9 @@ export function ShopFilters({ count, category, colour, occasion }: ActiveFilters
             <span className="mr-1 w-16 shrink-0 text-[0.58rem] uppercase tracking-brand text-brand-soft">
               Colour
             </span>
-            <Pill label="Any" active={!colour} href={buildHref({ category, occasion })} />
+            <Pill label="Any" active={!colour} href={href({ colour: undefined })} />
             {COLOURS.map((entry) => (
-              <Pill
-                key={entry}
-                label={entry}
-                active={entry === colour}
-                href={buildHref({ category, occasion, colour: entry })}
-              />
+              <Pill key={entry} label={entry} active={entry === colour} href={href({ colour: entry })} />
             ))}
           </div>
         </div>

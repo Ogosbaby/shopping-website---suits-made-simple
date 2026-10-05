@@ -46,7 +46,7 @@ export default async function AccountPage() {
       </header>
 
       {orders.length === 0 ? (
-        <div className="mt-12 border border-line bg-white p-12 text-center shadow-card">
+        <div className="mt-12 border border-line bg-surface p-12 text-center shadow-card">
           <p className="font-display text-xl text-ink">No orders yet.</p>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-brand-light">
             When you place an order it will appear here with its full tailoring details.
@@ -58,7 +58,7 @@ export default async function AccountPage() {
       ) : (
         <div className="mt-12 space-y-8">
           {orders.map((order) => (
-            <article key={order.id} className="border border-line bg-white shadow-card">
+            <article key={order.id} className="border border-line bg-surface shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-7 py-5">
                 <div>
                   <p className="label-caps">Order reference</p>

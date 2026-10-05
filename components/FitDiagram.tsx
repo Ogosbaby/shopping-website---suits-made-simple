@@ -172,7 +172,7 @@ export function FitDiagram({ className = "", activeKey, onSelectKey }: FitDiagra
                   className={`relative flex h-7 w-7 items-center justify-center rounded-full border text-[0.65rem] font-bold shadow-md transition-colors ${
                     isSelected
                       ? "border-taupe-light bg-brand-deeper text-taupe-light ring-2 ring-taupe"
-                      : "border-line/80 bg-white/95 text-ink hover:bg-brand hover:text-white"
+                      : "border-line/80 bg-surface/95 text-ink hover:bg-brand hover:text-white"
                   }`}
                 >
                   {spot.n}

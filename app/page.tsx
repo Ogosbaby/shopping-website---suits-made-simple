@@ -5,7 +5,11 @@ import { ShopByColour } from "@/components/ShopByColour";
 import { ShopByOccasion } from "@/components/ShopByOccasion";
 import { LogoMark } from "@/components/Logo";
 import { ProductCard } from "@/components/ProductCard";
-import { getFeaturedProducts } from "@/lib/products";
+import { AppOnlySection } from "@/components/AppOnlySection";
+import { MobileShopSections } from "@/components/MobileShopSections";
+import { MobileProductFeed } from "@/components/MobileProductFeed";
+import { ViewMoreGate } from "@/components/ViewMoreGate";
+import { getFeaturedProducts, getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -32,35 +36,38 @@ const EDITORIAL = [
 ];
 
 export default async function HomePage() {
-  const featured = await getFeaturedProducts(4);
+  const [featured, allProducts] = await Promise.all([
+    getFeaturedProducts(4),
+    getProducts(),
+  ]);
 
-  return (
+  /** The full editorial web layout — shown on all web viewports (mobile, tablet, desktop). */
+  const webLayout = (
     <>
       <HeroSlideshow />
 
       {/* Featured collection */}
-      <section className="shell py-20 sm:py-24">
+      <section className="shell py-16 sm:py-20 lg:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="label-caps">The Collection</p>
             <h2 className="section-title mt-3">Selected pieces</h2>
           </div>
-          <Link
-            href="/shop"
-            className="text-[0.7rem] font-semibold uppercase tracking-brand text-brand transition-colors hover:text-ink"
-          >
-            View all →
-          </Link>
         </div>
 
         {featured.length > 0 ? (
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          /* Relative wrapper so the gradient + button can overlay the bottom of the grid */
+          <div className="relative mt-10">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {featured.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            {/* Gradient fade + floating 'View More' / sign-in gate */}
+            <ViewMoreGate />
           </div>
         ) : (
-          <div className="mt-12 border border-line bg-white p-10 text-center shadow-card">
+          <div className="mt-12 border border-line bg-surface p-10 text-center shadow-card">
             <p className="font-display text-xl text-ink">The collection is being prepared.</p>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-brand-light">
               Connect the store to its database and run <code className="text-brand">supabase/seed.sql</code>{" "}
@@ -71,8 +78,8 @@ export default async function HomePage() {
       </section>
 
       {/* Editorial frames */}
-      <section className="shell pb-20 sm:pb-24">
-        <div className="grid gap-5 sm:grid-cols-3">
+      <section className="shell pb-16 sm:pb-20 lg:pb-24">
+        <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
           {EDITORIAL.map((frame, index) => (
             <figure
               key={frame.src}
@@ -80,7 +87,7 @@ export default async function HomePage() {
                 index === 0 ? "sm:col-span-2" : ""
               }`}
             >
-              <div className={index === 0 ? "aspect-[16/10]" : "aspect-[16/10]"}>
+              <div className="aspect-[16/10]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={frame.src}
@@ -98,14 +105,12 @@ export default async function HomePage() {
       </section>
 
       <HowItWorks />
-
       <ShopByOccasion />
-
       <ShopByColour />
 
       {/* About — The SMS Standard */}
-      <section id="about" className="border-y border-line bg-white">
-        <div className="shell grid gap-14 py-20 sm:py-24 lg:grid-cols-[1fr_1.1fr]">
+      <section id="about" className="border-y border-line bg-surface">
+        <div className="shell grid gap-14 py-16 sm:py-20 lg:grid-cols-[1fr_1.1fr] lg:py-24">
           <div>
             <p className="label-caps">About Us</p>
             <h2 className="section-title mt-3 max-w-md">The SMS Standard</h2>
@@ -166,5 +171,35 @@ export default async function HomePage() {
         </div>
       </section>
     </>
+  );
+
+  /** The Jumia-style app layout — only shown inside the Capacitor shell. */
+  const appLayout = (
+    <>
+      <MobileShopSections />
+      <MobileProductFeed products={allProducts.length > 0 ? allProducts : featured} />
+
+      {/* Closing CTA strip */}
+      <div className="bg-brand-deeper py-10 text-center">
+        <LogoMark className="mx-auto h-8 w-8 text-white/70" />
+        <p className="mt-4 px-6 font-display text-lg leading-snug text-white">
+          Standard sizing or bespoke tailoring — the fit is always yours.
+        </p>
+        <div className="mt-6 flex flex-col items-center gap-3 px-6">
+          <Link href="/shop" className="btn-light w-full max-w-xs">
+            Shop the collection
+          </Link>
+          <Link href="/fit-guide" className="btn-outline-light w-full max-w-xs">
+            Find your fit
+          </Link>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <AppOnlySection webFallback={webLayout}>
+      {appLayout}
+    </AppOnlySection>
   );
 }
